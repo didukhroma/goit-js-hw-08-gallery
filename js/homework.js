@@ -1,9 +1,4 @@
 import gallery from '../gallery-items.js';
-//add index to gallery
-gallery.forEach((galleryElem, index) => {
-  galleryElem.index = index;
-});
-
 //----------------------------------------
 const refs = {
   galleryListRef: document.querySelector('.js-gallery'),
@@ -13,10 +8,10 @@ const refs = {
     'button[data-action="close-lightbox"]',
   ),
 };
-
+let indexOfImage = 0;
 //function mark up string
 const galleryMarkUpString = arr =>
-  arr.reduce((str, { preview, original, description, index }) => {
+  arr.reduce((str, { preview, original, description }, index) => {
     str += `<li class="gallery__item">
   <a
     class="gallery__link"
@@ -58,6 +53,7 @@ const closeClickOnBtn = () => {
   refs.closeOverlayBtnRef.addEventListener('click', event => {
     clearPicSrcAndAlt();
     removeClassOverlayIsOpen();
+    windowRemoveListener();
   });
 };
 //function close overlay after click on overlay
@@ -66,14 +62,32 @@ const closeAfterClickOnOverlay = () => {
     if (event.target.classList.contains('lightbox__overlay')) {
       clearPicSrcAndAlt();
       removeClassOverlayIsOpen();
+      windowRemoveListener();
     }
   });
 };
 //function press Escape
-const pressEscape = event => {
+const pressEscape = () => {
   if (event.code === 'Escape') {
     clearPicSrcAndAlt();
     removeClassOverlayIsOpen();
+    windowRemoveListener();
+  }
+};
+//function press rightArrow
+const pressRightArrow = () => {
+  if (event.code === 'ArrowRight') {
+    clearPicSrcAndAlt();
+    indexOfImage = indexOfImage === gallery.length - 1 ? 0 : +indexOfImage + 1;
+    setNewImg(indexOfImage);
+  }
+};
+//function press leftArrow
+const pressLeftArrow = () => {
+  if (event.code === 'ArrowLeft') {
+    clearPicSrcAndAlt();
+    indexOfImage = indexOfImage === 0 ? gallery.length - 1 : +indexOfImage - 1;
+    setNewImg(indexOfImage);
   }
 };
 //function set new pic when press right or press left arrow keyboard
@@ -81,7 +95,24 @@ const setNewImg = indexOfImage => {
   refs.bigPicRef.src = gallery[indexOfImage].original;
   refs.bigPicRef.alt = gallery[indexOfImage].description;
 };
-
+//function press keyboard
+const pressKeyboard = () => {
+  //escape
+  pressEscape();
+  //arrowRight
+  pressRightArrow();
+  //arrowLeft
+  pressLeftArrow();
+};
+//function add listener to window
+const windowAddListener = () => {
+  window.addEventListener('keydown', pressKeyboard);
+};
+//function remove listener to window
+const windowRemoveListener = () => {
+  window.removeEventListener('keydown', pressKeyboard);
+};
+//create mark up on html
 addMarkUpToHTML(gallery);
 
 //----------------listener
@@ -91,7 +122,8 @@ refs.galleryListRef.addEventListener('click', event => {
   //click on list return
   if (event.target === event.currentTarget) return;
   // index big pic
-  let indexOfImage = event.target.dataset.index;
+  // let indexOfImage = event.target.dataset.index;
+  indexOfImage = event.target.dataset.index;
   //open overlayRef
   addClassToOverlayIsOpen();
   //overlayRef pic
@@ -101,22 +133,6 @@ refs.galleryListRef.addEventListener('click', event => {
   closeClickOnBtn();
   //close overlayRef click not on pic;
   closeAfterClickOnOverlay();
-  // close overlayRef  escape
-  window.addEventListener('keydown', event => {
-    pressEscape(event);
-    //arrowRight
-    if (event.code === 'ArrowRight') {
-      clearPicSrcAndAlt();
-      indexOfImage =
-        indexOfImage === gallery.length - 1 ? 0 : +indexOfImage + 1;
-      setNewImg(indexOfImage);
-    }
-    //arrowLeft
-    if (event.code === 'ArrowLeft') {
-      clearPicSrcAndAlt();
-      indexOfImage =
-        indexOfImage === 0 ? gallery.length - 1 : +indexOfImage - 1;
-      setNewImg(indexOfImage);
-    }
-  });
+  // keyboard action
+  windowAddListener();
 });
